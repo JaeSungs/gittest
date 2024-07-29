@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+	xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd
+ http://www.springframework.org/schema/security
+ http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<!-- 접근 권한과 사용자 권한 설정 http태그는 스프링 시큐리티 설정의 핵심이며 http 태그의 시작과 끝 안에 스프링 시큐리티와 
+		관련된 내용을 포함합니다. -->
+	<http use-expressions="true">
+		<!-- url 요청이 /books/add 로 되면 바로 addBook.jsp 페이지를 보여주는 것이 아니라 login.jsp 
+			페이지로 intercept(가로채기) 되어 연결된다. 또한 addBook.jsp 로 연결 될수 있는 access 권한은 ROLE_ADMIN 
+			(관리자) 만 연결 될 수 있게 설정 함. -->
+		<intercept-url pattern="/books/add"
+			access="hasAuthority('ROLE_ADMIN')" />
+		<form-login login-page="/login"
+			default-target-url="/books/add"
+			authentication-failure-url="/loginfailed"
+			username-parameter="username" password-parameter="password" />
+		<csrf />
+		<logout logout-success-url="/logout" />
+	</http>
+	<!-- 사용자권한(authentication) 서비스 태그는 허가된 사용자의 아이디와 비밀번호 등의 사용자정보를 직접 설정 하는데 
+		사용합니다. authentication-manager : 사용자 권한 인증 최상위 태그 authentication-provider 
+		: 사용자 정보 인증 요청 처리 user-service : 사용자 정보를 가져올때 사용 user : name, password, authorities 
+		속성으로 사용자 정보를 나타낼때 사용 authorities 에는 기본 권한을 표기 해주면 되는데 , 각 권한은 ROLE_ADMIN 
+		: 관리자 ROLE_USER : 일반 사용자 ROLE_ANONYMOUS : 모든 사용자 ROLE_RESTRICTED : 제한된 사용자 
+		IS_AUTHENTICATED_FULLY : 인증된 사용자 IS_AUTHENTICATED_ANONYMOUSLY : 익명 사용자 IS_AUTHENTICATED_REMEMBERED 
+		: REMEBERED 사용자 이렇게 분류 된다. -->
+
+	<authentication-manager>
+		<authentication-provider>
+			<user-service>
+				<!-- 해당되는 user 이름과 패스워드, 권한을 설정한다. password 의 noop 은 텍스트 그대로 비밀번호로 인식하게 
+					해줌. 스프링 시큐리티 에서 비밀번호는 noop 을 사용하던지 비밀번호 암호화 를 하던지 둘 중 한가지는 해줘야 함 -->
+				<user name="Admin" password="{noop}Admin1234"
+					authorities="ROLE_ADMIN" />
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+</beans:beans>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow xmlns="http://www.springframework.org/schema/webflow"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.springframework.org/schema/webflow
+      http://www.springframework.org/schema/webflow/spring-webflow.xsd">
+
+<!-- var 요소를 사용하여 flow변수 를 선언합니다. 여기서 사용되는 Order 클래스는 java.io.Serializable 인터페이스로 구현되어 있어야 합니다.-->
+<var name="order" class="com.green.domain.Order" />
+   <!-- action-state 요소는 웹 플로우에서 특정 시점에 페이지 흐름을 제어하는데 사용합니다. -->
+   <action-state id="addCartToOrder">
+      <evaluate expression="cartServiceImpl.validateCart(requestParameters.cartId)" result="order.cart" />
+      <transition to="orderCartWarning" on-exception="com.green.exception.CartException" />
+      <transition to="orderCustomerInfo" />
+   </action-state>
+
+	<!-- view-state 요소는 웹 플로우 에서 호출 할 뷰(View)를 정의 하는 역할을 합니다. 
+	view-state 요소에서 id속성값 은 웹 브라우저에 출력할 뷰 페이지(JSP페이지)와 매핑됩니다. -->
+   <view-state id="orderCustomerInfo" model="order">
+   	  <!-- transition 요소는 현재 상태에서 발생한 이벤트를 처리하여 다른 상태로 전환하는 역할을 합니다.
+   	  on = "현재 상태에서 발생하는 이벤트ID" to = "이동하려는 뷰 페이지 이름"
+   	  정리하면 현재 페이지인 orderCustomerInfo.jsp 페이지 에서 customerInfo 라는 이벤트가 발생하면
+   	  orderShippingInfo.jsp 페이지로 이동 합니다. -->
+      <transition on="customerInfo" to="orderShippingInfo" />
+   </view-state>
+
+   <view-state id="orderShippingInfo" model="order">
+      <transition on="shippingInfo" to="orderConfirmation" />
+      <transition on="backToCustomerInfo" to="orderCustomerInfo" />
+   </view-state>
+
+   <view-state id="orderConfirmation">
+      <transition on="orderConfirmed" to="confirmOrder" />
+      <transition on="backToShippingInfo" to="orderShippingInfo" />
+   </view-state>
+
+   <action-state id="confirmOrder">
+      <evaluate expression="orderServiceImpl.saveOrder(order)" result="order.orderId"/>
+      <transition to="orderFinished" />
+   </action-state>
+
+   <view-state id="orderCartWarning">
+      <transition to="endState"/>
+   </view-state>
+
+   <view-state id="orderFinished" model="order">
+      <transition to="endState"/>
+   </view-state>
+
+   <!-- end-state 요소는 페이지 흐름의 종료를 정의합니다. 
+   id="현재 상태의 id" , view = "현재상태의 뷰 페이지 이름"-->
+   <end-state id="endState"/>	
+
+   <end-state id="orderCancelled" view = "orderCancelled.jsp"/> 
+
+   <global-transitions>
+      <transition on = "cancel" to="endState" />
+   </global-transitions>
+</flow>
